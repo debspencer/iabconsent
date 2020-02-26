@@ -1,4 +1,4 @@
-module github.com/LiveRamp/iabconsent
+module github.com/debspencer/iabconsent
 
 go 1.12
 

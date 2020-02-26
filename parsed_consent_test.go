@@ -1,11 +1,9 @@
 package iabconsent_test
 
 import (
-	"sort"
-
 	"github.com/go-check/check"
 
-	"github.com/LiveRamp/iabconsent"
+	"github.com/debspencer/iabconsent"
 )
 
 type ParsedConsentSuite struct{}
@@ -39,6 +37,10 @@ func (p *ParsedConsentSuite) TestParseConsentStrings(c *check.C) {
 			Type:          MultipleRangesMixed,
 			EncodedString: "BONMj34ONMj34ABACDENALqAAAAAqACAD3AVkByAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
 		},
+		{
+			Type:          V2,
+			EncodedString: "COvVNSUOvVNSUKyACDENAPCEANAAABwAAAIgBAwAgAVQCAAIEAgYAQAQoBAAECAA.IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw.QD5QAoBAAECAfIA",
+		},
 	}
 
 	for _, tc := range cases {
@@ -46,17 +48,30 @@ func (p *ParsedConsentSuite) TestParseConsentStrings(c *check.C) {
 		pc, err := iabconsent.Parse(tc.EncodedString)
 		c.Check(err, check.IsNil)
 
-		normalizeParsedConsent(pc)
-		normalizeParsedConsent(consentFixtures[tc.Type])
+		gotAllowedVendors := pc.AllowedVendors
+		gotDisclosedVendors := pc.DisclosedVendors
+		gotPublisherTC := pc.PublisherTC
 
-		c.Assert(pc, check.DeepEquals, consentFixtures[tc.Type])
+		pc.AllowedVendors = nil
+		pc.DisclosedVendors = nil
+		pc.PublisherTC = nil
+
+		expect := consentFixtures[tc.Type]
+
+		expectAllowedVendors := expect.AllowedVendors
+		expectDisclosedVendors := expect.DisclosedVendors
+		expectPublisherTC := expect.PublisherTC
+
+		expect.AllowedVendors = nil
+		expect.DisclosedVendors = nil
+		expect.PublisherTC = nil
+
+		c.Assert(pc, check.DeepEquals, expect)
+
+		c.Assert(gotAllowedVendors, check.DeepEquals, expectAllowedVendors)
+		c.Assert(gotDisclosedVendors, check.DeepEquals, expectDisclosedVendors)
+		c.Assert(gotPublisherTC, check.DeepEquals, expectPublisherTC)
 	}
-}
-
-func normalizeParsedConsent(p *iabconsent.ParsedConsent) {
-	sort.Slice(p.RangeEntries, func(i, j int) bool {
-		return p.RangeEntries[i].StartVendorID < p.RangeEntries[j].StartVendorID
-	})
 }
 
 var _ = check.Suite(&ParsedConsentSuite{})

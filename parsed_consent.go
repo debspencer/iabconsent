@@ -19,21 +19,53 @@ import (
 
 // ParsedConsent represents data extracted from an IAB Consent String, v1.1.
 type ParsedConsent struct {
-	Version           int
-	Created           time.Time
-	LastUpdated       time.Time
-	CMPID             int
-	CMPVersion        int
-	ConsentScreen     int
-	ConsentLanguage   string
-	VendorListVersion int
-	PurposesAllowed   map[int]bool
-	MaxVendorID       int
-	IsRangeEncoding   bool
-	ConsentedVendors  map[int]bool
-	DefaultConsent    bool
+	Version               int               // 1.1 2.0
+	Created               time.Time         // 1.1 2.0
+	LastUpdated           time.Time         // 1.1 2.0
+	CMPID                 int               // 1.1 2.0
+	CMPVersion            int               // 1.1 2.0
+	ConsentScreen         int               // 1.1 2.0
+	ConsentLanguage       string            // 1.1 2.0
+	VendorListVersion     int               // 1.1 2.0
+	PolicyVersion         int               //     2.0
+	IsSpecificService     bool              //     2.0
+	UseNonStandardStacks  bool              //     2.0
+	SpecialFeatureOptins  map[int]bool      //     2.0
+	PurposesAllowed       map[int]bool      // 1.1 2.0
+	PurposesTransparancy  map[int]bool      //     2.0
+	PurposeOneTreatment   bool              //     2.0
+	PublisherCC           string            //     2.0
+	MaxVendorID           int               // 1.1 2.0
+	ConsentedVendors      map[int]bool      // 1.1 2.0
+	LegitMaxVendorID      int               //     2.0
+	LegitConsentedVendors map[int]bool      //     2.0
+	NumPubRestrictions    int               //     2.0
+	PubRestrictions       []*PubRestriction //     2.0
+	DisclosedVendors      *Vendors          //     2.0
+	AllowedVendors        *Vendors          //     2.0
+	PublisherTC           *PublisherTC      //     2.0
+}
+
+type PubRestriction struct {
+	PurposeId         int
+	RestrictionType   int
 	NumEntries        int
-	RangeEntries      []*RangeEntry
+	RestrictedVendors map[int]bool
+}
+
+type Vendors struct {
+	SegmentType      int
+	MaxVendorID      int
+	ConsentedVendors map[int]bool
+}
+
+type PublisherTC struct {
+	SegmentType                  int
+	PubPurposesConsent           map[int]bool
+	PubPurposesLITransparency    map[int]bool
+	NumCustomPurposes            int
+	CustomPurposesConsent        map[int]bool
+	CustomPurposesLITransparency map[int]bool
 }
 
 // EveryPurposeAllowed returns true iff every purpose number in ps exists in
@@ -50,21 +82,5 @@ func (p *ParsedConsent) EveryPurposeAllowed(ps []int) bool {
 // VendorAllowed returns true if the ParsedConsent contains affirmative consent
 // for VendorID v.
 func (p *ParsedConsent) VendorAllowed(v int) bool {
-	if p.IsRangeEncoding {
-		for _, re := range p.RangeEntries {
-			if re.StartVendorID <= v && v <= re.EndVendorID {
-				return !p.DefaultConsent
-			}
-		}
-		return p.DefaultConsent
-	}
-
 	return p.ConsentedVendors[v]
-}
-
-// RangeEntry defines an inclusive range of vendor IDs from StartVendorID to
-// EndVendorID.
-type RangeEntry struct {
-	StartVendorID int
-	EndVendorID   int
 }
