@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"time"
 
-	"github.com/debspencer/iabconsent"
+	"github.com/LiveRamp/iabconsent"
 	"github.com/go-check/check"
 )
 
